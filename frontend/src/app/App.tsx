@@ -41,20 +41,35 @@ function App() {
   }
 
   // ========================= PANTALLA DE LOGIN =========================
+    // ========================= PANTALLA DE LOGIN =========================
+  // En vez de mostrar solo el login, mostramos la BIENVENIDA de fondo
+  // y el LOGIN flotando encima como modal (con su fondo difuminado).
+  // Así se logra el efecto de "cuadradito al centro con la página atrás".
   if (screen === "login") {
     return (
-      <Login
-        onBack={() => setScreen("welcome")}
-        onLogin={(role) => {
-          setUserRole(role);        // guardamos el rol elegido
-          setScreen("app");         // pasamos a la aplicación
-          if (role === "analyst") {
-            setActivePage("dashboard"); // el admin arranca en el Dashboard
-          }
-        }}
-      />
+      <>
+        {/* Capa de fondo: la misma pantalla de bienvenida, quieta detrás. */}
+        {/* Sus botones no hacen falta aquí, pero los dejamos conectados igual. */}
+        <Welcome
+          onStart={() => setScreen("login")}
+          onLogin={() => setScreen("login")}
+        />
+
+        {/* Capa de encima: el login como modal (trae su propio scrim difuminado). */}
+        <Login
+          onBack={() => setScreen("welcome")}
+          onLogin={(role) => {
+            setUserRole(role);        // guardamos el rol elegido
+            setScreen("app");         // pasamos a la aplicación
+            if (role === "analyst") {
+              setActivePage("dashboard"); // el admin arranca en el Dashboard
+            }
+          }}
+        />
+      </>
     );
   }
+
 
   // ========================= PANEL DEL USUARIO / CLIENTE =========================
   if (screen === "app" && userRole === "user") {

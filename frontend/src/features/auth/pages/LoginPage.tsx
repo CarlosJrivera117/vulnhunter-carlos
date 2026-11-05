@@ -3,6 +3,8 @@ import { useState } from "react";
 import { theme } from "../../../shared/styles/theme";
 // Iconos de la librería lucide-react (ojo abierto / ojo tachado).
 import { Eye, EyeOff } from "lucide-react";
+// Funciones que hablan con el backend de autenticación.
+import { registrarUsuario, iniciarSesion, ApiError } from "../../../shared/api/auth";
 
 
 // Atajo para no escribir "theme.colors" en cada línea.

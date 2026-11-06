@@ -122,6 +122,9 @@ function Login({ onBack, onLogin }: LoginProps) {
   const [password, setPassword] = useState("");
   // Aviso temporal (para proveedores que aún no funcionan).
   const [aviso, setAviso] = useState("");
+    // Mensaje de error del login (ej: "correo o contraseña incorrectos").
+  const [loginError, setLoginError] = useState("");
+
 
   // ---- Estados del formulario de REGISTRO ----
   // Cada campo del formulario de "Crear cuenta" guarda lo que el usuario escribe.
@@ -138,15 +141,40 @@ function Login({ onBack, onLogin }: LoginProps) {
   // Controla si la contraseña del registro se muestra (texto) u oculta (puntitos).
   const [verPassword, setVerPassword] = useState(false);
 
-  // ---- LÓGICA DE LOGIN (igual que antes) ----
-  // "analista" en el correo -> admin; cualquier otro -> cliente.
-  // Más adelante se reemplaza por la autenticación real del backend.
-  const handleLogin = () => {
-    if (email.toLowerCase().includes("analista")) {
-      onLogin("analyst");
+
+  // ---- LÓGICA DE LOGIN (conectado al backend) ----
+  // Envía correo y contraseña a /auth/login. Si son correctos, el backend
+  // devuelve el usuario con su role ("admin" o "user") y entramos al panel.
+  const handleLogin = async () => {
+    // Validación mínima: que no estén vacíos.
+    if (!email.trim() || !password) {
+      setLoginError("Ingresa tu correo y contraseña.");
       return;
     }
-    onLogin("user");
+
+    setLoginError(""); // limpiamos errores anteriores
+
+    try {
+      // Llamamos al backend (POST /auth/login).
+      const usuario = await iniciarSesion(email.trim(), password);
+
+      // El backend nos dice el role. Lo traducimos al que espera el panel:
+      // "admin" -> "analyst" (panel de administrador)
+      // "user"  -> "user"    (panel de cliente)
+      if (usuario.role === "admin") {
+        onLogin("analyst");
+      } else {
+        onLogin("user");
+      }
+    } catch (error) {
+      // 401 = correo o contraseña incorrectos.
+      if (error instanceof ApiError && error.status === 401) {
+        setLoginError("Correo o contraseña incorrectos.");
+      } else {
+        // Error de conexión (backend apagado, CORS, sin internet, etc.).
+        setLoginError("No se pudo conectar con el servidor. Revisa tu conexión.");
+      }
+    }
   };
 
   // ---- Validar y crear cuenta (conectado al backend) ----
@@ -209,7 +237,6 @@ function Login({ onBack, onLogin }: LoginProps) {
       }
     }
   };
-
 
 
   // Aviso "próximamente" para Google/Microsoft (aún sin backend).
@@ -469,6 +496,15 @@ function Login({ onBack, onLogin }: LoginProps) {
               onChange={(e) => setPassword(e.target.value)}
               style={input}
             />
+
+
+                        {/* Mensaje de error del login (solo aparece si hay un error). */}
+            {loginError && (
+              <p style={{ color: c.severity.critical, fontSize: "13px", marginTop: "16px", marginBottom: 0 }}>
+                {loginError}
+              </p>
+            )}
+
 
             {/* Botón principal: ejecuta la lógica de login. */}
             <button style={{ ...btnPrimary, marginTop: "24px" }} onClick={handleLogin}>

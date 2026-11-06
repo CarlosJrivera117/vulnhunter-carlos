@@ -133,7 +133,6 @@ function Login({ onBack, onLogin }: LoginProps) {
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regPassword2, setRegPassword2] = useState(""); // confirmar contraseña
-  const [regNacimiento, setRegNacimiento] = useState("");
   const [regTelefono, setRegTelefono] = useState("");
   const [regRut, setRegRut] = useState("");
   // Guarda mensajes de error de validación por campo (ej: "RUT inválido").
@@ -200,8 +199,9 @@ function Login({ onBack, onLogin }: LoginProps) {
       setRegError("Las contraseñas no coinciden.");
       return;
     }
-    if (!regRut.trim() || !rutValido(regRut)) {
-      setRegError("El RUT no es válido. Revisa el número y el dígito verificador.");
+       // El RUT de empresa es opcional: solo lo validamos si el usuario escribió algo.
+    if (regRut.trim() && !rutValido(regRut)) {
+      setRegError("El RUT de empresa no es válido. Revisa el número y el dígito verificador.");
       return;
     }
 
@@ -218,8 +218,8 @@ function Login({ onBack, onLogin }: LoginProps) {
         apellido: regApellido.trim(),
         rut: regRut.trim() || undefined,
         telefono: regTelefono.trim() || undefined,
-        fecha_nacimiento: regNacimiento || undefined,
       });
+
 
       // Si el backend respondió bien, mostramos la pantalla de "Cuenta creada".
       setView("success");
@@ -664,44 +664,35 @@ function Login({ onBack, onLogin }: LoginProps) {
               </div>
             </div>
 
-            {/* --- Fila: Fecha de nacimiento y Teléfono (dos columnas) --- */}
+                        {/* --- Teléfono de contacto --- */}
             <span 
              style={sectionLabel}>Información de contacto
             </span>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginTop: "16px" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "13.5px", fontWeight: 500 }}>Fecha de nacimiento</label>
-                <input
-                  type="date"
-                  value={regNacimiento}
-                  onChange={(e) => setRegNacimiento(e.target.value)}
-                  style={input}
-                />
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: "13.5px", fontWeight: 500 }}>Número de contacto</label>
-                {/* Al escribir, formateamos el teléfono automáticamente. */}
-                <input
-                  type="tel"
-                  placeholder="9 1234 5678"
-                  value={regTelefono}
-                  onChange={(e) => setRegTelefono(formatearTelefono(e.target.value))}
-                  style={input}
-                />
-              </div>
-            </div>
-
-            {/* --- RUT (con formateo automático mientras se escribe) --- */}
             <label style={{ display: "block", fontSize: "13.5px", fontWeight: 500, marginTop: "16px" }}>
-              RUT
+              Número de contacto
+            </label>
+            {/* Al escribir, formateamos el teléfono automáticamente. */}
+            <input
+              type="tel"
+              placeholder="9 1234 5678"
+              value={regTelefono}
+              onChange={(e) => setRegTelefono(formatearTelefono(e.target.value))}
+              style={input}
+            />
+
+
+                        {/* --- RUT de empresa (opcional, con formateo automático) --- */}
+            <label style={{ display: "block", fontSize: "13.5px", fontWeight: 500, marginTop: "16px" }}>
+              RUT de empresa <span style={{ color: c.muted, fontWeight: 400 }}>(opcional)</span>
             </label>
             <input
-              placeholder="12.345.678-9"
+              placeholder="76.123.456-7"
               value={regRut}
               onChange={(e) => setRegRut(formatearRut(e.target.value))}
               style={input}
             />
+
 
             {/* Mensaje de error de validación (solo aparece si hay un error). */}
             {regError && (

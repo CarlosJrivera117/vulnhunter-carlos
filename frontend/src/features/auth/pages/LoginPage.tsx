@@ -138,8 +138,6 @@ function Login({ onBack, onLogin }: LoginProps) {
   // Controla si la contraseña del registro se muestra (texto) u oculta (puntitos).
   const [verPassword, setVerPassword] = useState(false);
 
-
-
   // ---- LÓGICA DE LOGIN (igual que antes) ----
   // "analista" en el correo -> admin; cualquier otro -> cliente.
   // Más adelante se reemplaza por la autenticación real del backend.
@@ -150,10 +148,11 @@ function Login({ onBack, onLogin }: LoginProps) {
     }
     onLogin("user");
   };
-    // ---- Validar y "crear cuenta" (por ahora sin backend) ----
+
+  // ---- Validar y crear cuenta (conectado al backend) ----
   // Revisa todos los campos; si algo falla, muestra un error y no avanza.
-  // Si todo está bien, pasa a la pantalla de "Cuenta creada".
-  const handleRegistro = () => {
+  // Si todo está bien, envía los datos al backend y guarda el usuario en la base.
+  const handleRegistro = async () => {
     // Validación simple de correo (que tenga algo@algo.algo).
     const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(regEmail.trim());
 
@@ -178,11 +177,39 @@ function Login({ onBack, onLogin }: LoginProps) {
       return;
     }
 
-    // Si llegó hasta acá, todo está correcto: limpiamos el error y avanzamos.
-    // (Más adelante, aquí se enviarán los datos al backend de Nico.)
+    // Si todas las validaciones pasaron, limpiamos el error y enviamos al backend.
     setRegError("");
-    setView("success");
+
+    try {
+      // Enviamos los datos al backend (POST /auth/register).
+      // Solo mandamos rut/telefono/fecha si el usuario los escribió.
+      await registrarUsuario({
+        email: regEmail.trim(),
+        password: regPassword,
+        nombre: regNombre.trim(),
+        apellido: regApellido.trim(),
+        rut: regRut.trim() || undefined,
+        telefono: regTelefono.trim() || undefined,
+        fecha_nacimiento: regNacimiento || undefined,
+      });
+
+      // Si el backend respondió bien, mostramos la pantalla de "Cuenta creada".
+      setView("success");
+    } catch (error) {
+      // Si el backend devuelve un error controlado (ej: correo o RUT repetido).
+      if (error instanceof ApiError) {
+        if (error.status === 409) {
+          setRegError("Este correo o RUT ya está registrado.");
+        } else {
+          setRegError("No se pudo crear la cuenta. Intenta de nuevo.");
+        }
+      } else {
+        // Error de conexión (backend apagado, sin internet, CORS, etc.).
+        setRegError("No se pudo conectar con el servidor. Revisa tu conexión.");
+      }
+    }
   };
+
 
 
   // Aviso "próximamente" para Google/Microsoft (aún sin backend).
